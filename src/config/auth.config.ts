@@ -24,6 +24,13 @@ export function createAuth() {
 
     trustedOrigins: [env.CLIENT_URL],
 
+    advanced: {
+      defaultCookieAttributes: {
+        sameSite: "lax",
+        secure: env.NODE_ENV === "production",
+      },
+    },
+
     user: {
       additionalFields: {
         role: {

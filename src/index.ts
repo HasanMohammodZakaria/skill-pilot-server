@@ -28,7 +28,7 @@ async function bootstrap() {
   app.use("/api", createApiRouter(auth));
 
   app.get("/", (_req, res) => {
-    res.send("✅ EstateHub API is running");
+    res.send("✅ SkillPilot API is running");
   });
 
   app.use(errorMiddleware);

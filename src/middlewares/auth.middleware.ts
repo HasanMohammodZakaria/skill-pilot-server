@@ -38,3 +38,4 @@ export function createAuthMiddleware(auth: Auth) {
     }
   };
 }
+
