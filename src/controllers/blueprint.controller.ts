@@ -166,3 +166,31 @@ export const getMyBlueprints = asyncHandler(async (req: Request, res: Response) 
 
   res.json({ success: true, data: items });
 });
+export const getBlueprintFilters = asyncHandler(async (_req: Request, res: Response) => {
+  const collection = BlueprintCollection();
+
+  const [categories, difficulties] = await Promise.all([
+    collection
+      .aggregate([
+        { $match: { status: "published" } },
+        { $group: { _id: "$category", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+      ])
+      .toArray(),
+    collection
+      .aggregate([
+        { $match: { status: "published" } },
+        { $group: { _id: "$difficulty", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+      ])
+      .toArray(),
+  ]);
+
+  res.json({
+    success: true,
+    data: {
+      categories: categories.map((c) => ({ value: c._id, count: c.count })),
+      difficulties: difficulties.map((d) => ({ value: d._id, count: d.count })),
+    },
+  });
+});
