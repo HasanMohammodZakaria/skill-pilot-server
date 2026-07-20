@@ -78,3 +78,33 @@ export const deleteReview = asyncHandler(async (req: Request, res: Response) => 
   await ReviewCollection().deleteOne({ _id: new ObjectId(reviewId) });
   res.json({ success: true, message: "Review deleted" });
 });
+
+export const getFeaturedReviews = asyncHandler(async (req: Request, res: Response) => {
+  const reviews = await ReviewCollection()
+    .aggregate([
+      { $match: { rating: { $gte: 4 } } },
+      { $sort: { createdAt: -1 } },
+      { $limit: 6 },
+      {
+        $lookup: {
+          from: "user",
+          localField: "userId",
+          foreignField: "_id",
+          as: "userInfo",
+        },
+      },
+      {
+        $addFields: {
+          userImageUrl: { $arrayElemAt: ["$userInfo.image", 0] },
+        },
+      },
+      {
+        $project: {
+          userInfo: 0,
+        },
+      },
+    ])
+    .toArray();
+
+  res.json({ success: true, data: reviews });
+});

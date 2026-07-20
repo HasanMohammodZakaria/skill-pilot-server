@@ -16,12 +16,15 @@ import {
   deleteBlueprint,
   getMyBlueprints,
   getBlueprintFilters,
+  getFeaturedBlueprints,
 } from "../controllers/blueprint.controller.js";
 
 export function blueprintRoutes(auth: Auth) {
   const router = Router();
   const requireAuth = createAuthMiddleware(auth);
 
+
+  router.get("/featured", getFeaturedBlueprints);
   router.get("/filters", getBlueprintFilters);
   router.get("/", getBlueprints);
   router.get("/mine", requireAuth, getMyBlueprints);

@@ -5,6 +5,7 @@ import { reviewRoutes } from "./review.routes.js";
 import { aiRoutes } from "./ai.routes.js";
 import { dashboardRoutes } from "./dashboard.routes.js";
 import { adminRoutes } from "./admin.routes.js";
+import { statsRoutes } from "./stats.routes.js";
 
 export function createApiRouter(auth: Auth) {
     const router = Router();
@@ -14,6 +15,7 @@ export function createApiRouter(auth: Auth) {
     router.use("/ai", aiRoutes(auth));
     router.use("/dashboard", dashboardRoutes(auth));
     router.use("/admin", adminRoutes(auth));
+    router.use("/stats", statsRoutes());
 
     return router;
 }

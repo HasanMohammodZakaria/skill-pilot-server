@@ -7,6 +7,7 @@ import {
   getReviewsForBlueprint,
   createReview,
   deleteReview,
+  getFeaturedReviews,
 } from "../controllers/review.controller.js";
 
 export function reviewRoutes(auth: Auth) {
@@ -20,6 +21,7 @@ export function reviewRoutes(auth: Auth) {
     validate(createReviewSchema),
     createReview
   );
+  router.get("/reviews/featured", getFeaturedReviews);
   router.delete("/reviews/:reviewId", requireAuth, deleteReview);
 
   return router;

@@ -166,6 +166,7 @@ export const getMyBlueprints = asyncHandler(async (req: Request, res: Response) 
 
   res.json({ success: true, data: items });
 });
+
 export const getBlueprintFilters = asyncHandler(async (_req: Request, res: Response) => {
   const collection = BlueprintCollection();
 
@@ -193,4 +194,14 @@ export const getBlueprintFilters = asyncHandler(async (_req: Request, res: Respo
       difficulties: difficulties.map((d) => ({ value: d._id, count: d.count })),
     },
   });
+});
+
+export const getFeaturedBlueprints = asyncHandler(async (req: Request, res: Response) => {
+  const blueprints = await BlueprintCollection()
+    .find({})
+    .sort({ createdAt: -1 })
+    .limit(4)
+    .toArray();
+
+  res.json({ success: true, data: blueprints });
 });
