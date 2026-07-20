@@ -6,6 +6,13 @@ import { BlueprintCollection } from "../models/blueprint.model.js";
 import type { AIGenerateBlueprintInput } from "../types/blueprint.types.js";
 import type { RecommendationInput, ChatMessageInput } from "../types/ai.types.js";
 
+interface BlueprintReviewResult {
+  score: number;
+  strengths: string[];
+  improvements: string[];
+  summary: string;
+}
+
 export const aiGenerateBlueprint = asyncHandler(async (req: Request, res: Response) => {
   const input = req.body as AIGenerateBlueprintInput;
   const result = await aiService.generateBlueprint(input);
@@ -37,11 +44,11 @@ export const aiReviewBlueprint = asyncHandler(async (req: Request, res: Response
     blueprint.roadmap
   )}`;
 
-  const result = await aiService.reviewBlueprint(blueprintText);
+  const result = (await aiService.reviewBlueprint(blueprintText)) as BlueprintReviewResult;
 
   await BlueprintCollection().updateOne(
     { _id: new ObjectId(blueprintId) },
-    { $set: { aiScore: (result as any).score } }
+    { $set: { aiScore: result.score } }
   );
 
   res.json({ success: true, data: result });

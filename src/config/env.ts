@@ -15,6 +15,7 @@ const envSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().min(1, "GOOGLE_CLIENT_SECRET is required"),
 
   GEMINI_API_KEY: z.string().min(1, "GEMINI_API_KEY is required"),
+  GROQ_API_KEY: z.string().min(1, "GROQ_API_KEY is required"),
 
   CLIENT_URL: z.string().url(),
 });

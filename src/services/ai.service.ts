@@ -1,22 +1,42 @@
 import { GoogleGenAI } from "@google/genai";
+import Groq from "groq-sdk";
 import { env } from "../config/env.js";
 import type { AIGenerateBlueprintInput } from "../types/blueprint.types.js";
 import type { RecommendationInput } from "../types/ai.types.js";
 
 const ai = new GoogleGenAI({ apiKey: env.GEMINI_API_KEY });
-const MODEL = "gemini-2.5-pro";
+const GEMINI_MODEL = "gemini-3.1-flash-lite";
 
-async function generateJSON<T>(prompt: string): Promise<T> {
-  const response = await ai.models.generateContent({
-    model: MODEL,
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-    },
-  });
+const groq = new Groq({ apiKey: env.GROQ_API_KEY });
+const GROQ_MODEL = "llama-3.3-70b-versatile";
 
-  const text = response.text ?? "{}";
-  return JSON.parse(text) as T;
+async function generateJSON<T>(prompt: string, retries = 2): Promise<T> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const response = await ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+        },
+      });
+
+      const text = response.text ?? "{}";
+      return JSON.parse(text) as T;
+    } catch (err: any) {
+      const isRetryable = err?.status === 503 || err?.status === 429;
+      const isLastAttempt = attempt === retries;
+
+      if (!isRetryable || isLastAttempt) {
+        throw err;
+      }
+
+      const delayMs = 1000 * (attempt + 1);
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+
+  throw new Error("Failed to generate content after retries");
 }
 
 export async function generateBlueprint(input: AIGenerateBlueprintInput) {
@@ -33,10 +53,15 @@ Return ONLY valid JSON with this exact shape:
   "title": string,
   "shortDescription": string,
   "fullDescription": string,
+  "category": string,
   "skillTags": string[],
   "estimatedDuration": string,
+  "learningGoal": string,
   "roadmap": [{ "step": number, "title": string, "description": string }]
 }
+
+For "category", pick a single short label (e.g. "Web Development", "Data Science", "Mobile Development").
+For "learningGoal", write one concise sentence describing what the learner will achieve.
 `;
 
   return generateJSON(prompt);
@@ -60,29 +85,34 @@ Return ONLY valid JSON with this exact shape:
   "suggestedNextSkills": string[]
 }
 `;
-
   return generateJSON(prompt);
 }
+
 
 export async function chatWithAssistant(
   history: { role: "user" | "model"; text: string }[],
   message: string
-) {
-  const chat = ai.chats.create({
-    model: MODEL,
-    history: history.map((h) => ({
-      role: h.role,
-      parts: [{ text: h.text }],
-    })),
-    config: {
-      systemInstruction:
+): Promise<string> {
+  const messages: Groq.Chat.ChatCompletionMessageParam[] = [
+    {
+      role: "system",
+      content:
         "You are SkillPilot AI's career assistant. Help users navigate the platform, " +
         "answer questions about learning paths, and give career guidance. Keep answers concise.",
     },
+    ...history.map((h) => ({
+      role: (h.role === "model" ? "assistant" : "user") as "assistant" | "user",
+      content: h.text,
+    })),
+    { role: "user" as const, content: message },
+  ];
+
+  const completion = await groq.chat.completions.create({
+    model: GROQ_MODEL,
+    messages,
   });
 
-  const response = await chat.sendMessage({ message });
-  return response.text ?? "";
+  return completion.choices[0]?.message?.content ?? "";
 }
 
 export async function reviewBlueprint(blueprintText: string) {
@@ -100,6 +130,5 @@ Return ONLY valid JSON with this exact shape:
   "summary": string
 }
 `;
-
   return generateJSON(prompt);
 }
