@@ -24,12 +24,12 @@ export function createAuth() {
 
     trustedOrigins: [env.CLIENT_URL],
 
-    advanced: {
-      defaultCookieAttributes: {
-        sameSite: env.NODE_ENV === "production" ? "none" : "lax",
-        secure: env.NODE_ENV === "production",
-      },
-    },
+   advanced: {
+  defaultCookieAttributes: {
+    sameSite: "lax",
+    secure: env.NODE_ENV === "production",
+  },
+},
 
     user: {
       additionalFields: {
