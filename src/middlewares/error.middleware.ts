@@ -8,7 +8,7 @@ export class AppError extends Error {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 export function errorMiddleware(
   err: unknown,
   req: Request,
